@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+
+  rune00:
+    build:
+      context: ./rune00
+      dockerfile: Dockerfile
+    container_name: rune00
+    environment:
+      - RUNE_ID=Rune00
+    volumes:
+      - ./rune00:/data
+      - ./companion-api/responses:/responses
+    ports:
+      - "6000:8000"
+    restart: always
+
+  rune0a:
+    build:
+      context: ./rune0a
+      dockerfile: Dockerfile
+    container_name: rune0a
+    environment:
+      - RUNE_ID=Rune0A
+    volumes:
+      - ./rune0a:/data
+      - ./companion-api/responses:/responses
+    ports:
+      - "6001:8000"
+    restart: always
+
+  rune0b:
+    build:
+      context: ./rune0b
+      dockerfile: Dockerfile
+    container_name: rune0b
+    environment:
+      - RUNE_ID=Rune0B
+    volumes:
+      - ./rune0b:/data
+      - ./companion-api/responses:/responses
+    ports:
+      - "6002:8000"
+    restart: always
+
+  rune0c:
+    build:
+      context: ./rune0c
+      dockerfile: Dockerfile
+    container_name: rune0c
+    environment:
+      - RUNE_ID=Rune0C
+    volumes:
+      - ./rune0c:/data
+      - ./companion-api/responses:/responses
+    ports:
+      - "6003:8000"
+    restart: always
+
+  rune0d:
+    build:
+      context: ./rune0d
+      dockerfile: Dockerfile
+    container_name: rune0d
+    environment:
+      - RUNE_ID=Rune0D
+    volumes:
+      - ./rune0d:/data
+      - ./companion-api/responses:/responses
+    ports:
+      - "6004:8000"
+    restart: always
+
+  companion-api:
+    network_mode: "host"
+    build:
+      context: ./companion-api
+      dockerfile: Dockerfile
+    container_name: companion-api
+    volumes:
+      - ./rune00:/data/rune00
+      - ./rune0a:/data/rune0a
+      - ./rune0b:/data/rune0b
+      - ./rune0c:/data/rune0c
+      - ./rune0d:/data/rune0d
+      - ./companion-api/responses:/responses
+    restart: always
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chromadb_data:/chroma/chroma  # Persistent storage for Chroma memory
+    restart: always
