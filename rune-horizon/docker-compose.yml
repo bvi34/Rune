@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  # ChromaDB service - start this first
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8001:8000"  # External access on 8001, internal on 8000
+    volumes:
+      - ./chromadb_data:/chroma/chroma  # Persistent storage for Chroma memory
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   rune00:
     build:
@@ -9,12 +24,17 @@ services:
     container_name: rune00
     environment:
       - RUNE_ID=Rune00
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
     volumes:
       - ./rune00:/data
       - ./companion-api/responses:/responses
     ports:
       - "6000:8000"
     restart: always
+    depends_on:
+      chromadb:
+        condition: service_healthy
 
   rune0a:
     build:
@@ -23,12 +43,17 @@ services:
     container_name: rune0a
     environment:
       - RUNE_ID=Rune0A
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
     volumes:
       - ./rune0a:/data
       - ./companion-api/responses:/responses
     ports:
       - "6001:8000"
     restart: always
+    depends_on:
+      chromadb:
+        condition: service_healthy
 
   rune0b:
     build:
@@ -37,12 +62,17 @@ services:
     container_name: rune0b
     environment:
       - RUNE_ID=Rune0B
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
     volumes:
       - ./rune0b:/data
       - ./companion-api/responses:/responses
     ports:
       - "6002:8000"
     restart: always
+    depends_on:
+      chromadb:
+        condition: service_healthy
 
   rune0c:
     build:
@@ -51,12 +81,17 @@ services:
     container_name: rune0c
     environment:
       - RUNE_ID=Rune0C
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
     volumes:
       - ./rune0c:/data
       - ./companion-api/responses:/responses
     ports:
       - "6003:8000"
     restart: always
+    depends_on:
+      chromadb:
+        condition: service_healthy
 
   rune0d:
     build:
@@ -65,12 +100,17 @@ services:
     container_name: rune0d
     environment:
       - RUNE_ID=Rune0D
+      - CHROMADB_HOST=chromadb
+      - CHROMADB_PORT=8000
     volumes:
       - ./rune0d:/data
       - ./companion-api/responses:/responses
     ports:
       - "6004:8000"
     restart: always
+    depends_on:
+      chromadb:
+        condition: service_healthy
 
   companion-api:
     network_mode: "host"
@@ -78,6 +118,9 @@ services:
       context: ./companion-api
       dockerfile: Dockerfile
     container_name: companion-api
+    environment:
+      - CHROMADB_HOST=localhost  # Since using host network
+      - CHROMADB_PORT=8001       # External port
     volumes:
       - ./rune00:/data/rune00
       - ./rune0a:/data/rune0a
@@ -86,11 +129,11 @@ services:
       - ./rune0d:/data/rune0d
       - ./companion-api/responses:/responses
     restart: always
-  chromadb:
-    image: chromadb/chroma:latest
-    container_name: chromadb
-    ports:
-      - "8001:8000"
-    volumes:
-      - ./chromadb_data:/chroma/chroma  # Persistent storage for Chroma memory
-    restart: always
+    depends_on:
+      chromadb:
+        condition: service_healthy
+
+# Create a shared network for better container communication
+networks:
+  default:
+    name: rune-horizon-network
